@@ -20,6 +20,12 @@ void DeviousDevices::UpdateManager::Setup()
 //this function is only called if no menu is open. It also looks like that it is not called when player is in free cam mode
 void DeviousDevices::UpdateManager::UpdatePlayer(RE::Actor* a_actor, float a_delta)
 {
+    if (a_actor == nullptr || a_actor->GetObjectReference() == nullptr)
+    {
+        UpdatePlayer_old(a_actor, a_delta);
+        return;
+    }
+
     static RE::Actor* loc_player = RE::PlayerCharacter::GetSingleton();
     
     UpdateManager* loc_manager = UpdateManager::GetSingleton();
@@ -84,6 +90,12 @@ void DeviousDevices::UpdateManager::UpdatePlayer(RE::Actor* a_actor, float a_del
 //this function is only called if no menu is open. It also looks like that it is not called when player is in free cam mode
 void DeviousDevices::UpdateManager::UpdateCharacter(RE::Actor* a_actor, float a_delta)
 {
+    if (a_actor == nullptr || a_actor->GetObjectReference() == nullptr)
+    {
+        UpdateCharacter_old(a_actor, a_delta);
+        return;
+    }
+
     const auto loc_refBase = a_actor->GetActorBase();
     if(a_actor->Is(RE::FormType::NPC) || (loc_refBase && loc_refBase->Is(RE::FormType::NPC)))
     {

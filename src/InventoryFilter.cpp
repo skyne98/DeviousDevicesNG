@@ -22,7 +22,10 @@ RE::TESObjectARMO* DeviousDevices::InventoryFilter::GetWornWithDeviousKeyword(RE
 }
 
 bool DeviousDevices::InventoryFilter::TakeFilter(RE::Actor* a_actor, RE::TESBoundObject* obj) {
-    if (!Settings::GetSingleton().GetSetting<bool>("mittensDropToggle") || obj == nullptr || obj->GetName() == "" ||
+    // Hooks can run before filter forms and the player base object are ready.
+    if (!_init || a_actor == nullptr || obj == nullptr || a_actor->GetObjectReference() == nullptr) return false;
+
+    if (!Settings::GetSingleton().GetSetting<bool>("mittensDropToggle") || obj->GetName() == "" ||
         a_actor->GetFormID() != 20 || UI::GetMenu<RE::BarterMenu>().get())
         return false;
 
@@ -48,7 +51,9 @@ bool DeviousDevices::InventoryFilter::TakeFilter(RE::Actor* a_actor, RE::TESBoun
 }
 
 bool DeviousDevices::InventoryFilter::EquipFilter(RE::Actor* a_actor, RE::TESBoundObject* a_item) {
-    if ((a_actor == nullptr) || (a_item == nullptr)) return true;
+    // The equipment detour is active before game data and actors are ready.
+    // Let the game handle early equipment without DD filtering.
+    if (!_init || a_actor == nullptr || a_item == nullptr || a_actor->GetObjectReference() == nullptr) return false;
 
     //DEBUG("EquipFilter({},{})",a_actor->GetName(),a_item->GetName())
 
@@ -303,7 +308,6 @@ bool DeviousDevices::InventoryFilter::CheckWhitelistFood(const RE::TESBoundObjec
 
 void DeviousDevices::InventoryFilter::Setup() {
     if (!_init) {
-        _init = true;
         static RE::TESDataHandler* loc_datahandler = RE::TESDataHandler::GetSingleton();
 
         _sexlabNoStripKwd = loc_datahandler->LookupForm<RE::BGSKeyword>(0x02F16E, "Sexlab.esm");
@@ -354,5 +358,8 @@ void DeviousDevices::InventoryFilter::Setup() {
         _inventoryDeviceKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_InventoryDevice");
 
         _PermitOralKwd = RE::TESForm::LookupByEditorID<RE::BGSKeyword>("zad_PermitOral");
+
+        // Publish the ready state only after all filter forms are available.
+        _init = true;
     }
 }
